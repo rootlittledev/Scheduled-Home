@@ -10,5 +10,6 @@ import lombok.*;
 @ToString
 public class ScheduleRequest {
     private String name;
+    private String type;
     private int timer;
 }
