@@ -27,17 +27,18 @@ public class SchedulerService {
         this.publisher = publisher;
     }
 
-    public LocalDateTime updateSchedule(ScheduleRequest request) {
-        String deviceName = request.getName();
-
-        scheduledTimers.get(deviceName).cancel(false);
-
-        return schedule(request);
-    }
-
     public LocalDateTime schedule(ScheduleRequest request) {
-        LocalDateTime timerOff = LocalDateTime.now().plusMinutes(request.getTimer());
         String deviceName = request.getName();
+        scheduledTimers.get(deviceName);
+
+        if (scheduledTimers.containsKey(deviceName)) {
+            log.debug("Update timer for device {}", deviceName);
+            cancel(deviceName);
+        } else {
+            log.debug("Start new timer");
+        }
+
+        LocalDateTime timerOff = LocalDateTime.now().plusMinutes(request.getTimer());
 
         Instant schedulerTimer = timerOff.toInstant(ZoneOffset.UTC);
         log.debug("Scheduled timer: {}", LocalDateTime.ofInstant(schedulerTimer, ZoneId.systemDefault()));
@@ -45,6 +46,10 @@ public class SchedulerService {
         ScheduledFuture<?> task = taskScheduler.schedule(() -> disableTimer(request.getType(), deviceName), timerOff.toInstant(ZoneOffset.ofHours(2)));
         scheduledTimers.put(deviceName, task);
         return timerOff;
+    }
+
+    public void cancel(String deviceName) {
+        scheduledTimers.get(deviceName).cancel(false);
     }
 
     private void disableTimer(String type, String name) {
